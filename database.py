@@ -1,4 +1,4 @@
-import pip as sq
+import sqlalchemy as sq
 import psycopg2
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
