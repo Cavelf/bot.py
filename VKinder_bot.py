@@ -11,9 +11,11 @@ from database import Session, User, MatchingUser, Photos, BlacklistedUser
 
 class VKinder_bot:
 
-    def __init__(self, token_user, token_search):
+    def __init__(self, token_user: str, token_search: str):
         self.token_user = token_user
         self.token_search = token_search
+        self.token_user = vk_api.VkApi(token=self.token_user)
+        self.token_search = vk_api.VkApi(token=self.token_search)
 
     def get_vk(self, url, new_params, **kwargs):
         params = {
