@@ -33,6 +33,15 @@ class VKinder_bot:
             print(f'Ошибка в данных: {result["errors"]}')
             return None
         return result['response']
+    
+        def get_params(add_params: dict = None):
+        params = {
+            'access_token': token_user,
+            'v': '5.107'
+        }
+        if add_params:
+            params.update(add_params)
+        return params
 
     def write_msg(self, user_id, message, keyboard=None):
         post = {'user_id': user_id, 'message': message, 'random_id': randrange(10 ** 7)}
@@ -41,6 +50,20 @@ class VKinder_bot:
         else:
             post = post
         vk.method('messages.send', post)
+        
+       # получаем имя и фамилию пользователя
+    def get_user_name(self):
+        response = requests.get(
+            'https://api.vk.com/method/users.get', self.get_params({'user_ids': self.user_id})
+        )
+        resp = response.json()
+        items = resp.get('response', {})
+        if not items:
+            return None
+        for user_info in items :
+            self.first_name = user_info['first_name']
+            self.last_name = user_info['last_name']
+        return self.first_name, self.last_name
 
     def start(self):
         for event in longpoll.listen():
