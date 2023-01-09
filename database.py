@@ -3,10 +3,13 @@ import psycopg2
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import os
+from config import login, password
+#from config import login, password, host
 
 login = os.getenv('login')
 kod = os.getenv('kod')
-engine = sq.create_engine(f'postgresql+psycopg2://{login}:{kod}@localhost:5432/VKinder')
+engine = sq.create_engine(f'postgresql+psycopg2://postgres: 7811@localhost:5432/vkinder')
+#engine = sq.create_engine(f'postgresql+psycopg2://{login}:{password}@{host}/vkinder', client_encoding='utf8')
 
 Session = sessionmaker(bind=engine)
 

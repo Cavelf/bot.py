@@ -6,16 +6,35 @@ import os
 import random
 from random import randrange
 from database import Session, User, MatchingUser, Photos, BlacklistedUser
+from config import * #token_user, token_search
 
 
-
+#token_user = config.token_user
+#token_search = config.token_search
 class VKinder_bot:
 
     def __init__(self, token_user: str, token_search: str):
         self.token_user = token_user
         self.token_search = token_search
-        self.token_user = vk_api.VkApi(token=self.token_user)
-        self.token_search = vk_api.VkApi(token=self.token_search)
+        self.token_user = vk_api.VkApi(token=token_user)
+        self.token_search = vk_api.VkApi(token=token_search)
+
+    def config_read(self):
+        '''
+        Функция читает необходимые токены из файла для использования в коде.
+        Предназначена для соблюдения мер безопасности,
+         по использованию персональных данных.
+        Результатом выполнения функции являются переменные,
+        в которых хранятся ключи доступа для использования VK_API:
+        ключ доступа пользователя и ключ доступа сообщества.
+        '''
+        config = 'all_tokens.config'
+        contents = open(config).read()
+        config = eval(contents)
+        token_user = config['token_user']
+        token_search = config['token_search']
+        return token_user, token_search
+
 
     def get_vk(self, url, new_params, **kwargs):
         params = {
@@ -34,23 +53,24 @@ class VKinder_bot:
             return None
         return result['response']
     
-        def get_params(add_params: dict = None):
+    def get_params(add_params: dict = None):
         params = {
             'access_token': token_user,
-            'v': '5.107'
+            'v': '5.131'
         }
         if add_params:
             params.update(add_params)
         return params
 
     def write_msg(self, user_id, message, keyboard=None):
-        post = {'user_id': user_id, 'message': message, 'random_id': randrange(10 ** 7)}
+        post = {'chat_id': user_id, 'message': message, 'random_id': randrange(10 ** 7)}
         if keyboard != None:
             post['keyboard'] = keyboard.get_keyboard()
         else:
             post = post
         vk.method('messages.send', post)
-        
+#        vk.method('messages.send', {'chat_id': user_id, 'message': message, 'random_id': random.randint(0, 2048)})
+
        # получаем имя и фамилию пользователя
     def get_user_name(self):
         response = requests.get(
@@ -74,7 +94,7 @@ class VKinder_bot:
                     keyboard.add_button('Да', color=VkKeyboardColor.POSITIVE)
                     keyboard.add_button('Нет', color=VkKeyboardColor.NEGATIVE)
                     keyboard.add_button('Help', color=VkKeyboardColor.SECONDARY)
-                    self.write_msg(event.user_id, f'Привет! \n'
+                    self.write_msg(event.chat_id, f'Привет! \n'
                                                   f'Это VKinder \n'
                                                   f'Найти пару?', keyboard=keyboard)
                     for event in longpoll.listen():
@@ -83,30 +103,32 @@ class VKinder_bot:
                             if text == 'да':
                                 bot.start_vkinder(event)
                             elif text == 'нет':
-                                self.write_msg(event.user_id, 'Заходите еще!')
+                                self.write_msg(event.chat_id, 'Заходите еще!')
                                 bot.start()
                             elif text == 'help':
-                                self.write_msg(event.user_id, 'Приложение для поиска партнера, нажмите start для \
+                                self.write_msg(event.chat_id, 'Приложение для поиска партнера, нажмите start для \
                                                               запуска бота. Заполните данные для \
                                                               поиска партнера')
                                 bot.start()
                             else:
-                                self.write_msg(event.user_id, 'Ошибка ввода данных')
+                                self.write_msg(event.chat_id, 'Ошибка ввода данных')
                 else:
                     if text != 'start':
-                        self.write_msg(event.user_id, 'Для запуска наберите - start')
+                        self.write_msg(event.chat_id, 'Для запуска наберите - start')
                         bot.start()
+                        print(event.chat_id)
 
     def start_vkinder(self, event):
         session = Session()
-        dating_id = event.user_id
+        dating_id = event.chat_id
         user = session.query(User).filter(User.dating_id == dating_id).all()
 
         if len(user) == 0:
-            self.get_user(event.user_id)
+            self.get_user(event.chat_id)
             return self.start_vkinder
         else:
             self.search_partner_command(event)
+            print()
 
     def search_partner_command(self, event):
         session = Session()
@@ -123,7 +145,7 @@ class VKinder_bot:
         keyboard.add_button('Не нравится', color=VkKeyboardColor.NEGATIVE)
         keyboard.add_button('Понравившиеся', color=VkKeyboardColor.POSITIVE)
         keyboard.add_button('Изменить параметры', color=VkKeyboardColor.PRIMARY)
-        self.write_msg(event.user_id, 'Поиск', keyboard=keyboard)
+        self.write_msg(event.chat_id, 'Поиск', keyboard=keyboard)
 
         partners_get = self.search_partner(partners_sex, city, age_to, age_from)
         list_partners = []
@@ -133,7 +155,7 @@ class VKinder_bot:
                 list_partners.append(partner_id)
 
         session = Session()
-        id_dater = event.user_id
+        id_dater = event.chat_id
         liked_users = session.query(MatchingUser).filter(MatchingUser.id_dater == id_dater).all()
         ignore_users = session.query(BlacklistedUser).filter(BlacklistedUser.id_dater == id_dater).all()
 
@@ -167,12 +189,12 @@ class VKinder_bot:
                     if photog['likes']['count'] in list(sorted_photo_dict.keys())[0:3]:
                         link_photo.append([photog['id'], photog['likes']['count'], photog['sizes'][-1]['url']])
 
-                self.write_msg(event.user_id, partner[0] + ' ' + partner[1])
+                self.write_msg(event.chat_id, partner[0] + ' ' + partner[1])
 
                 link = 'https://vk.com/id' + str(partner[2])
-                self.write_msg(event.user_id, link)
+                self.write_msg(event.chat_id, link)
                 for photo_send in photos:
-                    self.send_photo(event.user_id, photo_send)
+                    self.send_photo(event.chat_id, photo_send)
                 for event in longpoll.listen():
                     if event.type == VkEventType.MESSAGE_NEW and event.to_me and event.text:
                         text = event.text
@@ -189,7 +211,7 @@ class VKinder_bot:
                             self.update_user_data(event)
                             break
                         else:
-                            self.write_msg(event.user_id, 'Ошибка данных, попробуй еще')
+                            self.write_msg(event.chat_id, 'Ошибка данных, попробуй еще')
 
     def get_user(self, user_id):
         session = Session()
@@ -321,7 +343,7 @@ class VKinder_bot:
 
         session = Session()
 
-        id_dater = event.user_id
+        id_dater = event.chat_id
         liked_users = session.query(MatchingUser).filter(MatchingUser.id_dater == id_dater).all()
 
         for liked_user in liked_users:
@@ -329,9 +351,9 @@ class VKinder_bot:
             last_name = liked_user.last_name
             us_id = liked_user.matching_id
             user_info = first_name + ' ' + last_name + ' ' + 'https://vk.com/id' + str(us_id)
-            self.write_msg(event.user_id, user_info)
+            self.write_msg(event.chat_id, user_info)
 
-        self.write_msg(event.user_id, 'Продолжить поиск ?', keyboard=keyboard)
+        self.write_msg(event.chat_id, 'Продолжить поиск ?', keyboard=keyboard)
         for event in longpoll.listen():
             if event.type == VkEventType.MESSAGE_NEW and event.to_me and event.text:
                 text = event.text
@@ -353,13 +375,15 @@ class VKinder_bot:
                                                                     'partners_sex': sex,
                                                                     'city': city})
         session.commit()
-        self.write_msg(event.user_id, 'Информация обновлена')
+        self.write_msg(event.chat_id, 'Информация обновлена')
         self.search_partner_command(event)
 
 
 if __name__ == "__main__":
-    token_user = os.getenv('token_user')
-    token_search = os.getenv('token_search')
+#    token_user = os.getenv('token_user')
+#    token_search = os.getenv('token_search')
+    token_user = '...'
+    token_search = '...'
     bot = VKinder_bot(token_user, token_search)
     vk = vk_api.VkApi(token = token_user)
     longpoll = VkLongPoll(vk)
