@@ -104,20 +104,22 @@ class VKinder_bot:
                                 bot.start_vkinder(event)
                             elif text == 'нет':
                                 self.write_msg(event.chat_id, 'Заходите еще!')
-                                bot.start()
+                                #bot.start()
+                                self.start()
                             elif text == 'help':
                                 self.write_msg(event.chat_id, 'Приложение для поиска партнера, нажмите start для \
                                                               запуска бота. Заполните данные для \
                                                               поиска партнера')
-                                bot.start()
+                                #bot.start()
+                                self.start()
                             else:
                                 self.write_msg(event.chat_id, 'Ошибка ввода данных')
                 else:
                     if text != 'start':
                         self.write_msg(event.chat_id, 'Для запуска наберите - start')
-                        bot.start()
-                        print(event.chat_id)
-
+                        #bot.start()
+                        self.start()
+                        
     def start_vkinder(self, event):
         session = Session()
         dating_id = event.chat_id
