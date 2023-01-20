@@ -100,6 +100,7 @@ class VKinder_bot:
                     for event in longpoll.listen():
                         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                             text = event.text.lower()
+                            text = text.split(' ')[-1]
                             if text == 'да':
                                 bot.start_vkinder(event)
                             elif text == 'нет':
