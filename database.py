@@ -8,7 +8,7 @@ from config import login, password
 
 login = os.getenv('login')
 kod = os.getenv('kod')
-engine = sq.create_engine(f'postgresql+psycopg2://postgres: 7811@localhost:5432/vkinder')
+engine = sq.create_engine(f'postgresql+psycopg2://postgres:7811@localhost:5432/vkinder')
 #engine = sq.create_engine(f'postgresql+psycopg2://{login}:{password}@{host}/vkinder', client_encoding='utf8')
 
 Session = sessionmaker(bind=engine)

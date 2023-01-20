@@ -48,9 +48,10 @@ class VKinder_bot:
             return None
 
         result = response.json()
-        if 'errors' in result:
-            print(f'Ошибка в данных: {result["errors"]}')
+        if 'error' in result:
+            print(f'Ошибка в данных: {result["error"]}')
             return None
+        print(result)
         return result['response']
     
     def get_params(add_params: dict = None):
@@ -100,6 +101,10 @@ class VKinder_bot:
                     for event in longpoll.listen():
                         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                             text = event.text.lower()
+                            print(text)
+                            print(text=='да')
+                            print(event.user_id)
+                            text = text.split(' ')[-1]
                             if text == 'да':
                                 bot.start_vkinder(event)
                             elif text == 'нет':
@@ -119,14 +124,15 @@ class VKinder_bot:
                         self.write_msg(event.chat_id, 'Для запуска наберите - start')
                         #bot.start()
                         self.start()
-                        
+                        print(event.chat_id)
+
     def start_vkinder(self, event):
         session = Session()
         dating_id = event.chat_id
         user = session.query(User).filter(User.dating_id == dating_id).all()
 
         if len(user) == 0:
-            self.get_user(event.chat_id)
+            self.get_user(event.user_id, event.chat_id)
             return self.start_vkinder
         else:
             self.search_partner_command(event)
@@ -215,22 +221,24 @@ class VKinder_bot:
                         else:
                             self.write_msg(event.chat_id, 'Ошибка данных, попробуй еще')
 
-    def get_user(self, user_id):
+    def get_user(self, user_id, chat_id):
+        print(user_id)
         session = Session()
         info = self.get_vk('https://api.vk.com/method/users.get', {'user_ids': user_id})[0]
         first_name = info['first_name']
         last_name = info['last_name']
-        city = bot.get_city(user_id)
-        sex = bot.get_gender(user_id)
-        age_to = bot.get_age_to(user_id)
-        age_from = bot.get_age_from(user_id)
 
+        sex = bot.get_gender(chat_id)
+        age_to = bot.get_age_to(chat_id)
+        age_from = bot.get_age_from(chat_id)
+        city = bot.get_city(chat_id)
         user = User(dating_id=user_id, first_name=first_name, last_name=last_name, age_to=age_to, age_from=age_from,
                     city=city, partners_sex=sex)
         session.add(user)
         session.commit()
 
         self.write_msg(user_id, f'Пользователь {user_id} добавлен')
+
 
     def get_gender(self, user_id):
         keyboard = VkKeyboard(one_time=True)
@@ -239,10 +247,10 @@ class VKinder_bot:
         self.write_msg(user_id, 'Какого пола нужен партнер ?', keyboard=keyboard)
         for event in longpoll.listen():
             if event.type == VkEventType.MESSAGE_NEW and event.to_me and event.text:
-                text = event.text
-                if text == 'Девушка':
+                text = event.text.lower()
+                if text == 'девушка':
                     self.gender = '1'
-                elif text == 'Парень':
+                elif text == 'парень':
                     self.gender = '2'
                 else:
                     self.write_msg(user_id, 'Выберите: девушка или парень')
@@ -384,9 +392,13 @@ class VKinder_bot:
 if __name__ == "__main__":
 #    token_user = os.getenv('token_user')
 #    token_search = os.getenv('token_search')
-    token_user = '...'
-    token_search = '...'
+    token_user = token_user
+    token_search = token_search
+    #token_user = '...'
+    #token_search = '...'
     bot = VKinder_bot(token_user, token_search)
     vk = vk_api.VkApi(token = token_user)
     longpoll = VkLongPoll(vk)
+    #self.start()
     bot.start()
+
