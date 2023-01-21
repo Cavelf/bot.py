@@ -19,6 +19,7 @@ class VKinder_bot:
         self.token_user = vk_api.VkApi(token=token_user)
         self.token_search = vk_api.VkApi(token=token_search)
 
+
     def config_read(self):
         '''
         Функция читает необходимые токены из файла для использования в коде.
@@ -102,7 +103,7 @@ class VKinder_bot:
                             text = event.text.lower()
                             text = text.split(' ')[-1]
                             if text == 'да':
-                                bot.start_vkinder(event)
+                                self.start_vkinder(event)
                             elif text == 'нет':
                                 self.write_msg(event.chat_id, 'Заходите еще!')
                                 #bot.start()
@@ -221,10 +222,10 @@ class VKinder_bot:
         info = self.get_vk('https://api.vk.com/method/users.get', {'user_ids': user_id})[0]
         first_name = info['first_name']
         last_name = info['last_name']
-        city = bot.get_city(user_id)
-        sex = bot.get_gender(user_id)
-        age_to = bot.get_age_to(user_id)
-        age_from = bot.get_age_from(user_id)
+        city = self.get_city(user_id)
+        sex = self.get_gender(user_id)
+        age_to = self.get_age_to(user_id)
+        age_from = self.get_age_from(user_id)
 
         user = User(dating_id=user_id, first_name=first_name, last_name=last_name, age_to=age_to, age_from=age_from,
                     city=city, partners_sex=sex)
@@ -368,10 +369,10 @@ class VKinder_bot:
         user = session.query(User).all()[0]
         us_id = user.dating_id
 
-        city = bot.get_city(us_id)
-        sex = bot.get_gender(us_id)
-        age_to = bot.get_age_to(us_id)
-        age_from = bot.get_age_from(us_id)
+        city = self.get_city(us_id)
+        sex = self.get_gender(us_id)
+        age_to = self.get_age_to(us_id)
+        age_from = self.get_age_from(us_id)
 
         session.query(User).filter(User.dating_id == us_id).update({'age_from': age_from,
                                                                     'age_to': age_to,
