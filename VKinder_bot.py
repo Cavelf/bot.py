@@ -49,11 +49,16 @@ class VKinder_bot:
             return None
 
         result = response.json()
+
+        if 'error' in result:
+            print(f'Ошибка в данных: {result["error"]}')
+            return None
+
         if 'errors' in result:
             print(f'Ошибка в данных: {result["errors"]}')
             return None
         return result['response']
-    
+
     def get_params(add_params: dict = None):
         params = {
             'access_token': token_user,
@@ -132,15 +137,19 @@ class VKinder_bot:
             return self.start_vkinder
         else:
             self.search_partner_command(event)
-            print()
+            print('search_partner_command(')
 
     def search_partner_command(self, event):
+        print('search_partner_command(')
         session = Session()
         user = session.query(User).all()
         age_from = user[0].age_from
         age_to = user[0].age_to
         city = user[0].city
         partners_sex = user[0].partners_sex
+
+        print("sex: {}, city: {}, age: {}-{}".format(partners_sex, city, age_from, age_to))
+
         self.choose_partner(event, partners_sex, city, age_to, age_from)
 
     def choose_partner(self, event, partners_sex, city, age_to, age_from):
@@ -199,6 +208,7 @@ class VKinder_bot:
                 self.write_msg(event.chat_id, link)
                 for photo_send in photos:
                     self.send_photo(event.chat_id, photo_send)
+                print('foto')
                 for event in longpoll.listen():
                     if event.type == VkEventType.MESSAGE_NEW and event.to_me and event.text:
                         text = event.text
@@ -222,6 +232,8 @@ class VKinder_bot:
         info = self.get_vk('https://api.vk.com/method/users.get', {'user_ids': user_id})[0]
         first_name = info['first_name']
         last_name = info['last_name']
+
+
         city = self.get_city(user_id)
         sex = self.get_gender(user_id)
         age_to = self.get_age_to(user_id)
@@ -386,8 +398,8 @@ class VKinder_bot:
 if __name__ == "__main__":
 #    token_user = os.getenv('token_user')
 #    token_search = os.getenv('token_search')
-    token_user = '...'
-    token_search = '...'
+#    token_user = '...'
+#    token_search = '...'
     bot = VKinder_bot(token_user, token_search)
     vk = vk_api.VkApi(token = token_user)
     longpoll = VkLongPoll(vk)
