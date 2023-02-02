@@ -396,10 +396,7 @@ class VKinder_bot:
 
 
 if __name__ == "__main__":
-#    token_user = os.getenv('token_user')
-#    token_search = os.getenv('token_search')
-#    token_user = '...'
-#    token_search = '...'
+
     bot = VKinder_bot(token_user, token_search)
     vk = vk_api.VkApi(token = token_user)
     longpoll = VkLongPoll(vk)
